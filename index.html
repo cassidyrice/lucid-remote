@@ -83,11 +83,11 @@ footer{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;line-h
   <header><div class="wordmark">Lucid</div><div class="tag">remote synapse</div></header>
   <div class="capbar">
     <input id="cap" type="text" autocomplete="off"
-      placeholder="capture a thought &middot; ?oracle &middot; paste a link">
+      placeholder="ask for anything &mdash; create, distill, question, capture">
     <button onclick="sendCap()">&#10148;</button>
   </div>
-  <div class="hint">Everything lands in the brain instantly and gets digested at the 7am evolution.
-  Prefixes: <b>?</b> ask the oracle &middot; <b>influence:</b> add a muse &middot; <b>stats:</b> feed audience data &middot; YouTube link = distill order.</div>
+  <div class="hint">Plain words. The brain files it, answers it, or builds it &mdash; replies land right here. YouTube links get distilled automatically.</div>
+  <div class="card" id="reqCard" style="display:none"><h2>You &amp; the brain <span id="reqRefresh" style="float:right;cursor:pointer;color:var(--muted)">&#8635;</span></h2><div id="reqs"></div></div>
   <div class="stats" id="stats"></div>
   <div class="card"><h2>Neural map</h2><canvas id="cv"></canvas></div>
   <div class="card" id="briefCard" style="display:none"><h2>This morning &middot; <span id="briefDate"></span></h2>
@@ -98,9 +98,11 @@ footer{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;line-h
     <div class="results" id="results"></div></div>
   <div class="card" id="sugCard"><h2>Suggestions &middot; today</h2><div id="sugs"></div></div>
   <div class="card" id="dreamCard"><h2>Fresh dreams</h2><div id="dreams"></div></div>
-  <div class="card" id="pipeCard" style="display:none"><h2>Pipeline</h2><div id="pipe"></div></div>
-  <div class="card" id="loopCard"><h2>Loops</h2><div id="loops"></div></div>
-  <div class="card" id="fadeCard" style="display:none"><h2>Fading</h2><div id="fading"></div></div>
+  <details class="card" style="padding-bottom:14px"><summary style="font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);cursor:pointer">More &mdash; pipeline &middot; loops &middot; fading</summary>
+  <div id="pipeCard" style="display:none"><h2 style="margin-top:12px">Pipeline</h2><div id="pipe"></div></div>
+  <div id="loopCard"><h2 style="margin-top:12px">Loops</h2><div id="loops"></div></div>
+  <div id="fadeCard" style="display:none"><h2 style="margin-top:12px">Fading</h2><div id="fading"></div></div>
+  </details>
   <footer id="foot"></footer>
 </div>
 <div class="overlay" id="overlay" onclick="if(event.target===this)this.classList.remove('on')">
@@ -127,7 +129,8 @@ function boot(d){
   B = d;
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
-  render(); graph();
+  render(); graph(); loadRequests();
+  document.getElementById('reqRefresh').onclick=loadRequests;
 }
 (function init(){
   var p = localStorage.getItem(PASSKEY);
@@ -140,11 +143,36 @@ function boot(d){
 
 /* ---------- capture ---------- */
 function detectKind(t){
-  if(t.charAt(0)==='?') return ['oracle', 'oracle: '+t.slice(1).trim()];
-  if(/^influence\s*:/i.test(t)) return ['influence', t];
-  if(/^stats\s*:/i.test(t)) return ['stats', t];
-  if(/(youtube\.com\/(watch|shorts|live)|youtu\.be\/)/.test(t)) return ['distill', 'distill-video: '+t];
-  return ['thought', t];
+  if(/(youtube\.com\/(watch|shorts|live)|youtu\.be\/)/.test(t)) return ['distill', t];
+  return ['request', t];
+}
+function fmtWhen(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+function loadRequests(){
+  fetch(BASE+'/requests?p='+encodeURIComponent(localStorage.getItem(PASSKEY)))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var rs = d.requests||[];
+      if(!rs.length) return;
+      document.getElementById('reqCard').style.display='block';
+      var box = document.getElementById('reqs'); box.innerHTML='';
+      rs.slice(0,8).forEach(function(x){
+        var st = x.reply ? '<span class="pill" style="color:var(--c-reality);border-color:var(--c-reality)">answered</span>'
+               : (x.processed ? '<span class="pill">absorbed</span>' : '<span class="pill">queued</span>');
+        var el = document.createElement('div'); el.className='item';
+        el.innerHTML = st+' <span class="sub">'+fmtWhen(x.created_at)+'</span><br>'+
+          esc(x.text.length>90? x.text.slice(0,90)+'\u2026' : x.text)+
+          (x.reply? '<br><span style="color:var(--ink)">\u21b3 '+esc(x.reply.length>140? x.reply.slice(0,140)+'\u2026' : x.reply)+'</span>':'');
+        if(x.reply){ el.style.cursor='pointer';
+          el.onclick=function(){
+            document.getElementById('shTitle').textContent='The brain replies';
+            document.getElementById('shMeta').textContent = fmtWhen(x.replied_at);
+            document.getElementById('shBody').innerHTML = '<p style="color:var(--muted)">'+esc(x.text)+'</p><hr style="border:0;border-top:1px solid var(--grid);margin:10px 0">'+mdLite(x.reply);
+            document.getElementById('overlay').classList.add('on');
+          };
+        }
+        box.appendChild(el);
+      });
+    });
 }
 function sendCap(){
   var el = document.getElementById('cap'), v = el.value.trim();
