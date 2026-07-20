@@ -69,6 +69,16 @@ font-size:12px;color:var(--ink);cursor:pointer;margin:1px}
 .results .item{cursor:pointer}
 footer{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;line-height:1.6}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.hbtn{margin-left:auto;align-self:center;font:inherit;font-size:13px;color:var(--muted);
+cursor:pointer;background:none;border:1px solid var(--grid);border-radius:50%;
+width:24px;height:24px;line-height:1}
+details.sec>summary{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+color:var(--muted);cursor:pointer;list-style:none;-webkit-user-select:none;user-select:none}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary:after{content:'+';float:right;font-size:13px}
+details.sec[open]>summary:after{content:'\2212'}
+details.sec[open]>summary{margin-bottom:8px}
+footer a{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -80,28 +90,31 @@ footer{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;line-h
   <div class="hint" id="gateMsg"></div>
 </div>
 <div id="app" class="wrap" style="display:none">
-  <header><div class="wordmark">Lucid</div><div class="tag">remote synapse</div></header>
+  <header><div class="wordmark">Lucid</div><div class="tag">remote synapse</div>
+    <button class="hbtn" onclick="openAbout()" aria-label="what is this">?</button></header>
   <div class="capbar">
     <input id="cap" type="text" autocomplete="off"
       placeholder="ask for anything &mdash; create, distill, question, capture">
     <button onclick="sendCap()">&#10148;</button>
   </div>
-  <div class="hint">Plain words. The brain files it, answers it, or builds it &mdash; replies land right here. YouTube links get distilled automatically.</div>
+  <div class="hint">Plain words &mdash; ask, capture, or paste a YouTube link. Replies land below. Tap <b>?</b> for what the brain can do.</div>
   <div class="card" id="reqCard" style="display:none"><h2>You &amp; the brain <span id="reqRefresh" style="float:right;cursor:pointer;color:var(--muted)">&#8635;</span></h2><div id="reqs"></div></div>
-  <div class="stats" id="stats"></div>
-  <div class="card"><h2>Neural map</h2><canvas id="cv"></canvas></div>
-  <div class="card" id="briefCard" style="display:none"><h2>This morning &middot; <span id="briefDate"></span></h2>
-    <div class="item" id="brief" style="white-space:pre-wrap"></div></div>
   <div class="card"><h2>Search the brain</h2>
+    <div class="stats" id="stats" style="padding:0 0 8px"></div>
     <input id="q" type="text" placeholder="find a node&hellip;" autocomplete="off"
       style="width:100%;font:inherit;font-size:14px;padding:9px 12px;border-radius:9px;border:1px solid var(--grid);background:transparent;color:var(--ink);outline:0">
     <div class="results" id="results"></div></div>
-  <div class="card" id="sugCard"><h2>Suggestions &middot; today</h2><div id="sugs"></div></div>
-  <div class="card" id="dreamCard"><h2>Fresh dreams</h2><div id="dreams"></div></div>
-  <details class="card" style="padding-bottom:14px"><summary style="font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);cursor:pointer">More &mdash; pipeline &middot; loops &middot; fading</summary>
-  <div id="pipeCard" style="display:none"><h2 style="margin-top:12px">Pipeline</h2><div id="pipe"></div></div>
-  <div id="loopCard"><h2 style="margin-top:12px">Loops</h2><div id="loops"></div></div>
-  <div id="fadeCard" style="display:none"><h2 style="margin-top:12px">Fading</h2><div id="fading"></div></div>
+  <div class="card" id="briefCard" style="display:none"><h2>This morning &middot; <span id="briefDate"></span></h2>
+    <div class="item" id="brief" style="white-space:pre-wrap"></div></div>
+  <details class="card sec" id="sec-map"><summary>Neural map</summary><canvas id="cv"></canvas></details>
+  <details class="card sec" id="sec-today" open><summary>Today &mdash; suggestions &middot; dreams</summary>
+    <div id="sugCard"><h2 style="margin-top:4px">Suggestions</h2><div id="sugs"></div></div>
+    <div id="dreamCard"><h2 style="margin-top:12px">Fresh dreams</h2><div id="dreams"></div></div>
+  </details>
+  <details class="card sec" id="sec-more" style="padding-bottom:14px"><summary>More &mdash; pipeline &middot; loops &middot; fading</summary>
+    <div id="pipeCard" style="display:none"><h2 style="margin-top:12px">Pipeline</h2><div id="pipe"></div></div>
+    <div id="loopCard"><h2 style="margin-top:12px">Loops</h2><div id="loops"></div></div>
+    <div id="fadeCard" style="display:none"><h2 style="margin-top:12px">Fading</h2><div id="fading"></div></div>
   </details>
   <footer id="foot"></footer>
 </div>
@@ -129,8 +142,48 @@ function boot(d){
   B = d;
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
-  render(); graph(); loadRequests();
+  render(); loadRequests(); setupSections();
   document.getElementById('reqRefresh').onclick=loadRequests;
+}
+var graphDone=false;
+function ensureGraph(){
+  if(!graphDone && document.getElementById('sec-map').open){ graphDone=true; graph(); }
+}
+function setupSections(){
+  ['sec-map','sec-today','sec-more'].forEach(function(id){
+    var el=document.getElementById(id), k='lucid_sec_'+id, v=localStorage.getItem(k);
+    if(v!==null) el.open=(v==='1');
+    el.addEventListener('toggle', function(){
+      localStorage.setItem(k, el.open?'1':'0'); ensureGraph();
+    });
+  });
+  ensureGraph();
+}
+function openAbout(){
+  document.getElementById('shTitle').textContent='Lucid — what it is';
+  document.getElementById('shMeta').textContent='purpose · function · abilities';
+  document.getElementById('shBody').innerHTML=
+    '<h4>Purpose</h4>'+
+    '<p>Lucid is the remote control for a second brain — a living network of markdown notes '+
+    'that grows and reorganizes itself in the cloud. This page is how you talk to it from your phone.</p>'+
+    '<h4>How it functions</h4>'+
+    '<p>Every note is a <b>node</b>; links between notes are <b>synapses</b>. Engines rework the '+
+    'network daily and digest whatever you send at <b>7am</b>: thoughts get filed, questions get '+
+    'answered, requests get built. Replies land in <i>You &amp; the brain</i>.</p>'+
+    '<h4>Abilities</h4>'+
+    '<li><b>Everything Bar</b> — ask or capture anything in plain words</li>'+
+    '<li><b>Distill</b> — paste a YouTube link, get a note</li>'+
+    '<li><b>Search</b> — find any node instantly</li>'+
+    '<li><b>Morning briefing</b> — a daily digest, when the brain has one</li>'+
+    '<li><b>Fresh dreams</b> — new ideas born from colliding notes</li>'+
+    '<li><b>Suggestions</b> — daily prompts drawn from the network</li>'+
+    '<li><b>Pipeline</b> — content moving raw &rarr; outlined &rarr; scripted &rarr; filmed &rarr; posted</li>'+
+    '<li><b>Loops</b> — habit streaks over the last 7 days</li>'+
+    '<li><b>Fading</b> — nodes going quiet that may want attention</li>'+
+    '<li><b>Neural map</b> — the whole network drawn live</li>'+
+    '<p style="margin-top:10px">There is also a raw markdown vault — the private <b>Lucid-brain</b> '+
+    'repo — searchable at <a href="brain.html">brain.html</a>.</p>';
+  document.getElementById('overlay').classList.add('on');
 }
 (function init(){
   var p = localStorage.getItem(PASSKEY);
@@ -275,7 +328,8 @@ function render(){
   var eng=B.engines||{};
   function eg(e){ return e&&e.model? esc(String(e.model).replace(/^claude-/,''))+' · '+esc(e.date) : 'not yet reported'; }
   document.getElementById('foot').innerHTML='mirror updated '+esc(B.updated_at||'')+
-    '<br>engines — evolution: '+eg(eng.evolution)+' · studio: '+eg(eng.studio);
+    '<br>engines — evolution: '+eg(eng.evolution)+' · studio: '+eg(eng.studio)+
+    '<br><a href="brain.html">open the vault &rarr;</a>';
   document.getElementById('q').addEventListener('input', function(){
     var v=this.value.trim().toLowerCase(), r=document.getElementById('results'); r.innerHTML='';
     if(!v) return;
