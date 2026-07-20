@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<title>Lucid Brain</title>
+<style>
+:root{--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
+--grid:#e1e0d9;--border:rgba(11,11,11,.10);--accent:#4a3aa7;--good:#1baf7a;--warn:#e34948;}
+@media (prefers-color-scheme:dark){:root{--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;
+--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--border:rgba(255,255,255,.10);
+--accent:#9085e9;--good:#199e70;--warn:#e66767;}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+padding-bottom:48px}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px}
+header{display:flex;align-items:baseline;gap:10px;padding:16px 2px 10px}
+.wordmark{font-size:14px;font-weight:650;letter-spacing:.36em;text-transform:uppercase}
+.tag{font-size:11px;color:var(--muted);flex:1}
+.hbtn{font-size:15px;color:var(--muted);cursor:pointer;background:none;border:0;padding:2px 6px}
+.bar{display:flex;gap:8px;margin-bottom:8px}
+.bar input{flex:1;font:inherit;font-size:15px;padding:12px 14px;border-radius:11px;
+border:1px solid var(--border);background:var(--surface);color:var(--ink);outline:0;
+box-shadow:0 2px 10px rgba(11,11,11,.06)}
+.bar button{font:inherit;font-size:14px;font-weight:600;padding:0 18px;border-radius:11px;
+border:0;background:var(--ink);color:var(--page)}
+.searchbar{position:sticky;top:8px;z-index:10}
+.hint{font-size:10.5px;color:var(--muted);padding:2px 4px 10px;line-height:1.5}
+.stats{font-size:11.5px;color:var(--muted);padding:0 2px 10px}
+.stats b{color:var(--ink)}
+.tags{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:0 2px 12px;-webkit-overflow-scrolling:touch}
+.tags::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;font-size:11.5px;color:var(--ink2);border:1px solid var(--grid);border-radius:999px;
+padding:4px 11px;cursor:pointer;background:var(--surface);white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--page);border-color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+padding:12px 14px;margin-bottom:12px}
+.card h2{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+color:var(--muted);margin-bottom:6px}
+.item{padding:10px 0;border-top:1px solid var(--grid);font-size:13.5px;line-height:1.5;
+color:var(--ink2);cursor:pointer}
+.item:first-of-type{border-top:0}
+.item .tt{font-weight:600;color:var(--ink);font-size:14px}
+.item .sub{font-size:11px;color:var(--muted)}
+.item .snip{margin-top:2px}
+.item mark{background:none;color:var(--accent);font-weight:600}
+.pill{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+color:var(--muted);border:1px solid var(--grid);border-radius:4px;padding:1px 6px;margin-right:4px}
+.gate{max-width:340px;margin:22vh auto 0;text-align:center;padding:0 18px}
+.gate input{width:100%;font:inherit;font-size:16px;text-align:center;padding:12px;border-radius:11px;
+border:1px solid var(--border);background:var(--surface);color:var(--ink);outline:0;margin:16px 0 10px}
+.gate button{width:100%;font:inherit;font-size:14px;font-weight:600;padding:12px;border-radius:11px;
+border:0;background:var(--ink);color:var(--page)}
+.gate .hint{text-align:left;padding-top:12px}
+.gate .hint b{color:var(--ink2)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);
+color:var(--page);border-radius:999px;padding:10px 20px;font-size:13px;opacity:0;
+transition:opacity .25s;pointer-events:none;z-index:60;white-space:nowrap}
+.toast.on{opacity:1}
+.overlay{position:fixed;inset:0;background:rgba(11,11,11,.35);display:none;z-index:50;
+align-items:flex-end;justify-content:center}
+.overlay.on{display:flex}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;
+width:100%;max-width:560px;max-height:82vh;overflow-y:auto;padding:20px 18px 34px;
+-webkit-overflow-scrolling:touch}
+.sheet h3{font-size:17px;margin-bottom:4px}
+.sheet .meta{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.7}
+.sheet .meta a{color:var(--accent);text-decoration:none}
+.body{font-size:14.5px;line-height:1.7;color:var(--ink2)}
+.body h4{color:var(--ink);font-size:14px;margin:14px 0 4px}
+.body p{margin:8px 0}
+.body li{margin:4px 0 4px 18px}
+.body blockquote{border-left:3px solid var(--grid);padding-left:10px;margin:8px 0;color:var(--muted)}
+.body pre{background:var(--page);border:1px solid var(--grid);border-radius:8px;padding:10px;
+overflow-x:auto;font-size:12.5px;margin:8px 0}
+.body code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:var(--page);
+border-radius:4px;padding:1px 4px}
+.body pre code{background:none;padding:0}
+.body hr{border:0;border-top:1px solid var(--grid);margin:12px 0}
+.body a{color:var(--accent)}
+.body b,.body strong{color:var(--ink)}
+.wl{display:inline-block;border:1px solid var(--grid);border-radius:999px;padding:0 9px;
+font-size:.92em;color:var(--ink);cursor:pointer;margin:1px}
+footer{font-size:10.5px;color:var(--muted);text-align:center;padding:16px;line-height:1.8}
+footer span{cursor:pointer;text-decoration:underline}
+.empty{font-size:13px;color:var(--muted);padding:18px 4px;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" style="display:none">
+  <div class="wordmark">Lucid Brain</div>
+  <div class="tag" style="margin-top:6px">markdown hub &middot; phone-first</div>
+  <input id="tokIn" type="password" placeholder="fine-grained GitHub token" autocomplete="off">
+  <button onclick="tryToken()">Open the vault</button>
+  <div class="hint" id="gateMsg">
+    One-time setup: on github.com go to <b>Settings &rarr; Developer settings &rarr;
+    Personal access tokens &rarr; Fine-grained tokens &rarr; Generate new token</b>.<br>
+    &bull; Repository access: <b>Only select repositories &rarr; lucid-brain</b><br>
+    &bull; Permissions: <b>Contents &mdash; Read and write</b><br>
+    The token is stored only in this browser on this phone.
+  </div>
+</div>
+
+<div id="app" class="wrap" style="display:none">
+  <header>
+    <div class="wordmark">Lucid Brain</div><div class="tag">markdown hub</div>
+    <button class="hbtn" onclick="sync(true)" title="re-sync">&#8635;</button>
+  </header>
+  <div class="bar">
+    <input id="cap" type="text" autocomplete="off" placeholder="capture a thought&hellip;">
+    <button onclick="sendCap()">&#10148;</button>
+  </div>
+  <div class="bar searchbar">
+    <input id="q" type="search" autocomplete="off" placeholder="query the brain&hellip;">
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="tags" id="tagRow"></div>
+  <div class="card"><h2 id="listTitle">Notes</h2><div id="list"></div></div>
+  <footer>
+    everything lives as markdown in <b>lucid-brain</b> &middot;
+    <span onclick="logout()">forget token</span>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sheet"><h3 id="shTitle"></h3><div class="meta" id="shMeta"></div>
+  <div class="body" id="shBody"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var OWNER='cassidyrice', REPO='lucid-brain', BRANCH='main', DIR='notes/';
+var API='https://api.github.com', TOKKEY='lucid_brain_token';
+var TOKEN=null, NOTES=[], ACTIVETAG=null;
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');
+  setTimeout(function(){t.classList.remove('on');},2400);}
+function b64(s){return btoa(unescape(encodeURIComponent(s)));}
+function encPath(p){return p.split('/').map(encodeURIComponent).join('/');}
+function gh(path,opts){
+  opts=opts||{};
+  var h={'Authorization':'Bearer '+TOKEN,
+         'Accept':opts.raw?'application/vnd.github.raw+json':'application/vnd.github+json'};
+  return fetch(API+path,{method:opts.method||'GET',headers:h,body:opts.body});
+}
+
+/* ---------- cache (per-file, keyed by git sha) ---------- */
+function cGet(p){try{return JSON.parse(localStorage.getItem('lb:'+p));}catch(e){return null;}}
+function cSet(p,v){try{localStorage.setItem('lb:'+p,JSON.stringify(v));}catch(e){/* quota: skip */}}
+function cPrune(keep){
+  var i,k,rm=[];
+  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);
+    if(k.indexOf('lb:')===0 && !keep[k.slice(3)]) rm.push(k);}
+  rm.forEach(function(k){localStorage.removeItem(k);});
+}
+
+/* ---------- auth ---------- */
+function tryToken(){
+  TOKEN=$('tokIn').value.trim();
+  if(!TOKEN) return;
+  gh('/repos/'+OWNER+'/'+REPO).then(function(r){
+    if(r.ok){localStorage.setItem(TOKKEY,TOKEN);boot();}
+    else $('gateMsg').innerHTML='<b style="color:var(--warn)">token rejected ('+r.status+
+      ')</b> &mdash; check it targets <b>'+REPO+'</b> with Contents read/write.';
+  }).catch(function(){$('gateMsg').textContent='network error — try again';});
+}
+function logout(){localStorage.removeItem(TOKKEY);location.reload();}
+function boot(){
+  $('gate').style.display='none';$('app').style.display='block';
+  sync(false);
+}
+(function init(){
+  TOKEN=localStorage.getItem(TOKKEY);
+  if(!TOKEN){$('gate').style.display='block';return;}
+  boot();
+})();
+
+/* ---------- sync ---------- */
+function sync(force){
+  $('stats').innerHTML='syncing&hellip;';
+  gh('/repos/'+OWNER+'/'+REPO+'/git/trees/'+BRANCH+'?recursive=1').then(function(r){
+    if(r.status===401||r.status===403){logout();return null;}
+    if(!r.ok){toast('sync failed ('+r.status+')');return null;}
+    return r.json();
+  }).then(function(d){
+    if(!d) return;
+    var files=(d.tree||[]).filter(function(f){
+      return f.type==='blob'&&f.path.indexOf(DIR)===0&&/\.md$/i.test(f.path);});
+    var keep={};files.forEach(function(f){keep[f.path]=1;});cPrune(keep);
+    if(!files.length){NOTES=[];render();
+      $('list').innerHTML='<div class="empty">The brain is empty.<br>Capture a thought above, '+
+        'or drop .md files into <b>notes/</b>.</div>';return;}
+    loadAll(files,force);
+  }).catch(function(){toast('network error');$('stats').textContent='offline';renderFromCacheOnly();});
+}
+function renderFromCacheOnly(){
+  var i,k,c,out=[];
+  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);
+    if(k.indexOf('lb:')===0){c=cGet(k.slice(3));if(c&&c.text)out.push(parseNote(k.slice(3),c.text));}}
+  if(out.length){NOTES=out;render();toast('showing cached copy');}
+}
+function loadAll(files,force){
+  var queue=files.slice(),out=[],done=0,total=files.length;
+  function worker(){
+    if(!queue.length) return Promise.resolve();
+    var f=queue.shift(),c=cGet(f.path);
+    var p;
+    if(c&&c.sha===f.sha&&!force){p=Promise.resolve(c.text);}
+    else p=gh('/repos/'+OWNER+'/'+REPO+'/contents/'+encPath(f.path)+'?ref='+BRANCH,{raw:true})
+      .then(function(r){return r.ok?r.text():null;})
+      .then(function(t){if(t!==null)cSet(f.path,{sha:f.sha,text:t});return t;});
+    return p.then(function(t){
+      if(t!==null&&t!==undefined)out.push(parseNote(f.path,t));
+      done++;$('stats').innerHTML='syncing <b>'+done+'</b>/'+total+'&hellip;';
+      return worker();});
+  }
+  Promise.all([worker(),worker(),worker(),worker(),worker(),worker()]).then(function(){
+    NOTES=out;render();});
+}
+
+/* ---------- parse ---------- */
+function parseNote(path,text){
+  var fm={},body=text,m=text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if(m){body=text.slice(m[0].length);
+    m[1].split(/\r?\n/).forEach(function(l){var i=l.indexOf(':');
+      if(i>0)fm[l.slice(0,i).trim().toLowerCase()]=l.slice(i+1).trim();});}
+  var h=body.match(/^#\s+(.+)$/m);
+  var title=fm.title||(h&&h[1].trim())||
+    path.split('/').pop().replace(/\.md$/i,'').replace(/[-_]/g,' ');
+  var tags=[];
+  if(fm.tags)fm.tags.replace(/[\[\]"']/g,'').split(',').forEach(function(t){
+    t=t.trim().replace(/^#/,'');if(t)tags.push(t);});
+  (body.match(/(^|\s)#([a-z0-9][\w/-]*)/gi)||[]).forEach(function(t){
+    tags.push(t.trim().replace(/^#/,''));});
+  var seen={},uniq=[];tags.forEach(function(t){t=t.toLowerCase();
+    if(!seen[t]){seen[t]=1;uniq.push(t);}});
+  var created=fm.created||fm.date||'';
+  return {path:path,title:title,tags:uniq,body:body,created:created,
+    low:(title+'\n'+uniq.join(' ')+'\n'+body).toLowerCase()};
+}
+
+/* ---------- search + list ---------- */
+function render(){
+  var tagCount={};
+  NOTES.forEach(function(n){n.tags.forEach(function(t){tagCount[t]=(tagCount[t]||0)+1;});});
+  var tags=Object.keys(tagCount).sort(function(a,b){return tagCount[b]-tagCount[a];}).slice(0,14);
+  var tr=$('tagRow');tr.innerHTML='';
+  tags.forEach(function(t){
+    var c=document.createElement('span');
+    c.className='chip'+(ACTIVETAG===t?' on':'');c.textContent='#'+t;
+    c.onclick=function(){ACTIVETAG=(ACTIVETAG===t?null:t);render();};
+    tr.appendChild(c);});
+  $('stats').innerHTML='<b>'+NOTES.length+'</b> notes &middot; <b>'+
+    Object.keys(tagCount).length+'</b> tags';
+  runQuery();
+}
+function runQuery(){
+  var q=$('q').value.trim().toLowerCase(),list=$('list'),out=[];
+  var pool=ACTIVETAG?NOTES.filter(function(n){return n.tags.indexOf(ACTIVETAG)>=0;}):NOTES;
+  if(!q){
+    out=pool.slice().sort(function(a,b){
+      if(a.created&&b.created)return a.created<b.created?1:-1;
+      if(a.created)return -1;if(b.created)return 1;
+      return a.title.localeCompare(b.title);}).slice(0,30);
+    $('listTitle').textContent=ACTIVETAG?('#'+ACTIVETAG):'Recent';
+    list.innerHTML=out.length?out.map(row).join(''):
+      '<div class="empty">nothing here yet</div>';
+    return;
+  }
+  $('listTitle').textContent='Results';
+  var words=q.split(/\s+/).filter(Boolean);
+  pool.forEach(function(n){
+    var score=0,ok=true;
+    words.forEach(function(w){
+      if(n.low.indexOf(w)<0){ok=false;return;}
+      if(n.title.toLowerCase().indexOf(w)>=0)score+=10;
+      else if(n.tags.join(' ').indexOf(w)>=0)score+=5;
+      else score+=1;});
+    if(ok)out.push({n:n,s:score});});
+  out.sort(function(a,b){return b.s-a.s;});
+  list.innerHTML=out.length?out.slice(0,40).map(function(x){return row(x.n,q);}).join(''):
+    '<div class="empty">no notes match &ldquo;'+esc(q)+'&rdquo;</div>';
+}
+function snippet(n,q){
+  var i=n.body.toLowerCase().indexOf(q.split(/\s+/)[0]);
+  if(i<0)i=0;
+  var start=Math.max(0,i-40),s=n.body.slice(start,start+140).replace(/\s+/g,' ');
+  return (start>0?'…':'')+s+'…';
+}
+function hl(s,q){
+  var out=esc(s);
+  q.split(/\s+/).filter(Boolean).forEach(function(w){
+    out=out.replace(new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>');});
+  return out;
+}
+function row(n,q){
+  return '<div class="item" onclick="openNote(\''+n.path.replace(/'/g,"\\'")+'\')">'+
+    '<span class="tt">'+(q?hl(n.title,q):esc(n.title))+'</span>'+
+    (n.tags.length?' <span class="sub">'+n.tags.slice(0,3).map(function(t){return '#'+esc(t);}).join(' ')+'</span>':'')+
+    (q?'<div class="snip">'+hl(snippet(n,q),q)+'</div>':'')+
+    '</div>';
+}
+var qt=null;
+$('q').addEventListener('input',function(){clearTimeout(qt);qt=setTimeout(runQuery,120);});
+
+/* ---------- note sheet ---------- */
+function findByPath(p){for(var i=0;i<NOTES.length;i++)if(NOTES[i].path===p)return NOTES[i];return null;}
+function openNote(p){
+  var n=findByPath(p);if(!n){toast('note not loaded');return;}
+  $('shTitle').textContent=n.title;
+  $('shMeta').innerHTML=esc(n.path)+
+    (n.tags.length?' &middot; '+n.tags.map(function(t){return '#'+esc(t);}).join(' '):'')+
+    ' &middot; <a href="https://github.com/'+OWNER+'/'+REPO+'/edit/'+BRANCH+'/'+encPath(n.path)+
+    '" target="_blank" rel="noopener">edit on github</a>';
+  $('shBody').innerHTML=md(n.body);
+  $('overlay').classList.add('on');
+}
+function openLabel(lb){
+  lb=lb.toLowerCase();
+  for(var i=0;i<NOTES.length;i++)
+    if(NOTES[i].title.toLowerCase()===lb){openNote(NOTES[i].path);return;}
+  toast('no note named '+lb);
+}
+
+/* ---------- tiny markdown ---------- */
+function inline(s){
+  s=esc(s);
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\[\[([^\]|#]+?)(?:[#|][^\]]*)?\]\]/g,function(_,t){
+    return '<span class="wl" onclick="openLabel(\''+t.replace(/'/g,"\\'")+'\')">'+t+'</span>';});
+  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\*([^*]+)\*/g,'<i>$1</i>');
+  return s;
+}
+function md(src){
+  var out=[],lines=String(src||'').split(/\r?\n/),i,L,fence=false,buf=[];
+  for(i=0;i<lines.length;i++){
+    L=lines[i];
+    if(/^```/.test(L)){
+      if(fence){out.push('<pre><code>'+esc(buf.join('\n'))+'</code></pre>');buf=[];}
+      fence=!fence;continue;}
+    if(fence){buf.push(L);continue;}
+    if(/^\s*(---|\*\*\*)\s*$/.test(L)){out.push('<hr>');}
+    else if(/^#{1,6}\s/.test(L)){out.push('<h4>'+inline(L.replace(/^#{1,6}\s*/,''))+'</h4>');}
+    else if(/^\s*>\s?/.test(L)){out.push('<blockquote>'+inline(L.replace(/^\s*>\s?/,''))+'</blockquote>');}
+    else if(/^\s*([-*]|\d+\.)\s/.test(L)){out.push('<li>'+inline(L.replace(/^\s*([-*]|\d+\.)\s*/,''))+'</li>');}
+    else if(L.trim()===''){out.push('');}
+    else out.push('<p>'+inline(L)+'</p>');
+  }
+  if(fence&&buf.length)out.push('<pre><code>'+esc(buf.join('\n'))+'</code></pre>');
+  return out.join('');
+}
+
+/* ---------- capture ---------- */
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-')
+  .replace(/^-+|-+$/g,'').slice(0,40)||'note';}
+function sendCap(){
+  var el=$('cap'),v=el.value.trim();if(!v)return;
+  var now=new Date(),p2=function(n){return (n<10?'0':'')+n;};
+  var stamp=now.getFullYear()+'-'+p2(now.getMonth()+1)+'-'+p2(now.getDate())+
+    '-'+p2(now.getHours())+p2(now.getMinutes());
+  var title=v.split('\n')[0].slice(0,60);
+  var path=DIR+'inbox/'+stamp+'-'+slug(title)+'.md';
+  var text='---\ncreated: '+now.toISOString()+'\ntags: [inbox]\n---\n\n# '+title+'\n\n'+v+'\n';
+  gh('/repos/'+OWNER+'/'+REPO+'/contents/'+encPath(path),{method:'PUT',
+    body:JSON.stringify({message:'capture: '+title,content:b64(text),branch:BRANCH})
+  }).then(function(r){
+    if(r.ok||r.status===201){
+      el.value='';toast('captured to inbox');
+      NOTES.unshift(parseNote(path,text));render();
+    } else toast('capture failed ('+r.status+')');
+  }).catch(function(){toast('network error');});
+}
+$('cap').addEventListener('keydown',function(e){if(e.key==='Enter')sendCap();});
+</script>
+</body>
+</html>
